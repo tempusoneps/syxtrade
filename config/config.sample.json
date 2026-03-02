@@ -1,5 +1,5 @@
 {
-	"interval": 3,
+	"interval": 5,
 	"pipeline": {
 		"data": [
 			{
@@ -30,6 +30,12 @@
 				"name": "examples.storage_file",
 				"path": "modules.examples.log.storage_file",
 				"class": "ExampleLogFileService",
+				"enabled": true
+			},
+			{
+				"name": "examples.print_msg",
+				"path": "modules.examples.log.print_msg",
+				"class": "ExampleLogPrintService",
 				"enabled": true
 			}
 		]
