@@ -3,4 +3,5 @@ numpy
 pandas
 pandas-ta
 requests
-dateutil
+python-dateutil
+croniter
