@@ -5,3 +5,4 @@ pandas-ta
 requests
 python-dateutil
 croniter
+pymysql
