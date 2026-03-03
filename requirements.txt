@@ -7,3 +7,4 @@ python-dateutil
 croniter
 pymysql
 dotenv
+cryptography
