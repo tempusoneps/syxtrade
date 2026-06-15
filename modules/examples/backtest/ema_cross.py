@@ -36,8 +36,10 @@ log_queue = TempusOnePsLogQueue()
 services = load_services(config, log_queue)
 
 signal_services = services.get("signals", [])
-tops = TempusOnePsSignal(signal_services, data)
-signals_output = tops.run()
+tops = TempusOnePsSignal(signal_services, log_queue)
+tops.setup()
+signals_output = tops.run(data)
+tops.teardown()
 signals_output.dropna(inplace=True)
 
 

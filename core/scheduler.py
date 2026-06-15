@@ -4,10 +4,11 @@ from croniter import croniter
 
 
 class Scheduler:
-    def __init__(self, interval=None, cron_expr=None, callback=None):
+    def __init__(self, interval=None, cron_expr=None, callback=None, mode='live'):
         self.interval = interval
         self.cron_expr = cron_expr
         self.callback = callback
+        self.mode = mode
         self.cron_job = None
 
     def start(self):
@@ -23,6 +24,10 @@ class Scheduler:
                 time.sleep(0.5)
         elif self.interval:
             while True:
-                self.callback()
-                time.sleep(self.interval)
+                result = self.callback()
+                # dev mode: chạy nhanh nhất có thể, dừng khi data source báo hết
+                if result is False:
+                    break
+                if self.mode == 'live':
+                    time.sleep(self.interval)
 
