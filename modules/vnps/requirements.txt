@@ -1,0 +1,12 @@
+numpy
+pandas
+pandas-ta
+requests
+dateutil
+croniter
+backtesting
+matplotlib
+xgboost
+dotenv
+influxdb_client
+pymysql

@@ -1,0 +1,43 @@
+{
+	"interval": 3,
+	"pipeline": {
+		"data": [
+			{
+				"name": "replay_ohcl_csv",
+				"path": "modules.base.data.replay_ohcl_csv",
+				"class": "DataServiceExampleCsv",
+				"enabled": true
+			}
+		],
+		"signals": [
+			{
+				"name": "ema_cross.signal",
+				"path": "modules.base.signals.ema_cross",
+				"class": "EMACrossSignalPlugin",
+				"enabled": true
+			}
+		],
+		"execution": [
+			{
+				"name": "base.simple_worker",
+				"path": "modules.base.execution.simple_worker",
+				"class": "SimpleWorkerExecutionService",
+				"enabled": true
+			}
+		],
+		"log": [
+			{
+				"name": "base.storage_file",
+				"path": "modules.base.log.storage_file",
+				"class": "ExampleLogFileService",
+				"enabled": true
+			},
+			{
+				"name": "base.print_msg",
+				"path": "modules.base.log.print_msg",
+				"class": "ExampleLogPrintService",
+				"enabled": true
+			}
+		]
+	}
+}

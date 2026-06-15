@@ -1,0 +1,67 @@
+{
+	"cron": "*/5 9,10,11,13,14 * * 1-5",
+	"pipeline": {
+		"data": [
+			{
+				"name": "vn30f1m_dnse",
+				"path": "modules.vnps.data.vn30f1m_dnse",
+				"class": "DataServiceDNSE",
+				"enabled": true
+			}
+		],
+		"signals": [
+			{
+				"name": "ema_cross.signal",
+				"path": "modules.vnps.signals.ema_cross",
+				"class": "EMACrossSignalPlugin",
+				"enabled": true
+			},
+			{
+				"name": "max_high.predict",
+				"path": "modules.vnps.signals.predict_high_low",
+				"class": "AIPredictSignalPlugin",
+				"enabled": true
+			},
+			{
+				"name": "macd.signal",
+				"path": "modules.vnps.signals.macd",
+				"class": "OnlyMACDSignalPlugin",
+				"enabled": true
+			}
+		],
+		"execution": [
+			{
+				"name": "vnps.live_worker",
+				"path": "modules.vnps.execution.live_worker",
+				"class": "DnseWorkerExecutionService",
+				"enabled": true
+			}
+		],
+		"log": [
+			{
+				"name": "vnps.print_msg",
+				"path": "modules.vnps.log.print_msg",
+				"class": "LogPrintService",
+				"enabled": true
+			},
+			{
+				"name": "vnps.to_mysql",
+				"path": "modules.vnps.log.to_mysql",
+				"class": "LogMySQLService",
+				"enabled": true
+			},
+			{
+				"name": "vnps.storage_file",
+				"path": "modules.vnps.log.to_file",
+				"class": "LogFileService",
+				"enabled": true
+			},
+			{
+				"name": "vnps.send_telegram",
+				"path": "modules.vnps.log.to_telegram",
+				"class": "SendTelegrameService",
+				"enabled": true
+			}
+		]
+	}
+}
