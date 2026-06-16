@@ -1,6 +1,0 @@
-[submodule "lib/brokers"]
-	path = lib/brokers
-	url = git@github.com:zuongthaotn/brokers.git
-[submodule "lib/stock_price_patterns"]
-	path = lib/stock_price_patterns
-	url = git@github.com:zuongthaotn/stock-price-patterns.git
