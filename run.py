@@ -15,19 +15,11 @@ def main():
         help="Module name to run",
         default=""
     )
-    parser.add_argument(
-        "--mode",
-        type=str,
-        required=False,
-        choices=["live", "dev"],
-        default="live",
-        help="Run mode: 'live' (sleep between ticks) or 'dev' (replay as fast as possible)"
-    )
     args = parser.parse_args()
     #
     log_queue = TempusOnePsLogQueue()
     config = load_config(args, log_queue)
-    services = load_services(config, log_queue, mode=args.mode)
+    services = load_services(config, log_queue)
 
     # Setup phase
     for group in services.values():
@@ -65,7 +57,7 @@ def main():
 
     cron_expr = config.get("cron")
     interval = config.get("interval", None)
-    scheduler = Scheduler(interval=interval, cron_expr=cron_expr, callback=run_pipeline, mode=args.mode)
+    scheduler = Scheduler(interval=interval, cron_expr=cron_expr, callback=run_pipeline)
     scheduler.start()
 
     # Finish phase

@@ -1,18 +1,18 @@
 ---
-name: create-module
-description: Use when creating a new trading module for the TempusOnePs project — scaffolds directory structure, plugin boilerplate, and config.json for data/signal/execution/log/backtest components.
+name: create-strategy
+description: Use when creating a new trading strategy for the TempusOnePs project — scaffolds directory structure, plugin boilerplate, and config.json for data/signal/execution/log/backtest components.
 ---
 
-# Create TempusOnePs Module
+# Create TempusOnePs Strategy
 
 ## Overview
 
-A module is a self-contained directory at `modules/<name>/` containing `config/config.json` and plugin files for each pipeline stage: **data → signals → execution → log**.
+A strategy is a self-contained directory at `strategies/<name>/` containing `config/config.json` and plugin files for each pipeline stage: **data → signals → execution → log**.
 
 ## Directory Structure
 
 ```
-modules/<module_name>/
+strategies/<strategy_name>/
 ├── config/
 │   └── config.json          ← required
 ├── data/
@@ -38,7 +38,7 @@ modules/<module_name>/
     "data": [
       {
         "name": "<data_source>",
-        "path": "modules.<module_name>.data.<filename>",
+        "path": "strategies.<strategy_name>.data.<filename>",
         "class": "<ClassName>",
         "enabled": true
       }
@@ -46,15 +46,15 @@ modules/<module_name>/
     "signals": [
       {
         "name": "<strategy>.signal",
-        "path": "modules.<module_name>.signals.<filename>",
+        "path": "strategies.<strategy_name>.signals.<filename>",
         "class": "<ClassName>",
         "enabled": true
       }
     ],
     "execution": [
       {
-        "name": "<module_name>.executor",
-        "path": "modules.<module_name>.execution.<filename>",
+        "name": "<strategy_name>.executor",
+        "path": "strategies.<strategy_name>.execution.<filename>",
         "class": "<ClassName>",
         "enabled": true
       }
@@ -162,31 +162,15 @@ class MyLogger(BaseServicePlugin):
 
 ## 6. Backtest Script (optional)
 
-Compute signals **vectorized once** on the full dataset — do not replay bar-by-bar.
+Expose a `run(args)` function — called by the root `backtest.py` dispatcher.
 
 ```python
-import os, pandas as pd
+import os
 from backtesting.backtesting import Backtest, Strategy
 from core.utils import load_config
 from core.service_loader import load_services
 from core.log_queue import TempusOnePsLogQueue
 from core.service.base_signal import TempusOnePsSignal, SignalConfig
-
-current_folder = os.path.dirname(os.path.abspath(__file__))
-dataset = pd.read_csv(os.path.join(current_folder, "../data/data.csv"),
-                      index_col='Date', parse_dates=True)
-
-config_file = os.path.join(current_folder, "../../config/config.json")  # adjust path
-config = load_config(config_file)
-log_queue = TempusOnePsLogQueue()
-services = load_services(config, log_queue)
-
-signal_services = services.get("signals", [])
-tops = TempusOnePsSignal(signal_services, log_queue)
-tops.setup()
-signals_output = tops.run(dataset)
-tops.teardown()
-signals_output.dropna(inplace=True)
 
 
 class MainStrategy(Strategy):
@@ -202,18 +186,29 @@ class MainStrategy(Strategy):
             self.sell()
 
 
-bt = Backtest(signals_output, MainStrategy, commission=.0003, exclusive_orders=True)
-stats = bt.run()
-print(stats)
+def run(args):
+    log_queue = TempusOnePsLogQueue()
+    config = load_config(args, log_queue)
+    services = load_services(config, log_queue, mode='dev')
+
+    signal_services = services.get("signals", [])
+    tops = TempusOnePsSignal(signal_services, log_queue)
+    tops.setup()
+    signals_data = tops.run(dataset)
+    tops.teardown()
+    signals_data.dropna(inplace=True)
+
+    bt = Backtest(signals_data, MainStrategy, commission=.0003, exclusive_orders=True)
+    stats = bt.run()
+    print(stats)
 ```
 
-## Run Module
+## Run Strategy
 
 ```bash
-uv run python run.py --mod <module_name> --mode dev    # fast replay
-uv run python run.py --mod <module_name> --mode live   # live with sleep
-uv run python run-cron.py --mod <module_name>          # one-shot
-uv run python modules/<module_name>/backtest/<script>.py
+uv run python run.py --mod <strategy_name>                        # live
+uv run python run-cron.py --mod <strategy_name>                   # one-shot
+uv run python backtest.py --mod <strategy_name>                   # backtest
 ```
 
 ## Common Mistakes
@@ -222,7 +217,7 @@ uv run python modules/<module_name>/backtest/<script>.py
 |---------|-----|
 | Signal plugin returns a raw DataFrame | Must return `{"data": df, "meta_data": {"service_name": self.name}}` |
 | Data plugin never returns `None` | Dev mode runs forever |
-| `path` uses `/` instead of `.` | Use Python module path: `modules.name.data.file` |
+| `path` uses `/` instead of `.` | Use Python module path: `strategies.name.data.file` |
 | Creating `mp.Pool` inside a signal plugin | Not needed — core manages the persistent pool |
 | Reading wrong signal column name | Column name is whatever you set in the signal plugin, not `"signal"` |
-| Wrong arg type for `load_config` | `run.py` passes an `args` object; backtest scripts pass a `config_file` string — see `core/utils.py` |
+| Backtest script runs at top-level | Must wrap all logic in `run(args)` — called by `backtest.py` |
