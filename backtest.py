@@ -6,14 +6,14 @@ import sys
 def main():
     parser = argparse.ArgumentParser(description="TempusOne Backtest Runner")
     parser.add_argument(
-        "--mod",
+        "-s", "--strategy",
         type=str,
         required=True,
-        help="Module name to backtest (e.g. vnps)"
+        help="Strategy name to backtest (e.g. vnps)"
     )
     args = parser.parse_args()
 
-    module_path = f"strategies.{args.mod}.backtest.{args.mod}"
+    module_path = f"strategies.{args.strategy}.backtest.{args.strategy}"
     try:
         bt_module = importlib.import_module(module_path)
     except ModuleNotFoundError as e:

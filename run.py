@@ -9,10 +9,10 @@ from core.service.base_signal import TempusOnePsSignal
 def main():
     parser = argparse.ArgumentParser(description="TempusOne Pipeline Runner")
     parser.add_argument(
-        "--mod",
+        "-s", "--strategy",
         type=str,
         required=False,
-        help="Module name to run",
+        help="Strategy name to run",
         default=""
     )
     args = parser.parse_args()

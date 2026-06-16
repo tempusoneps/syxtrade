@@ -15,6 +15,7 @@ TempusOnePs là một nền tảng giao dịch thuật toán (algo trading) dạ
 │                      Entry Points                       │
 │         run.py (scheduler loop)                         │
 │         run-cron.py (one-shot / OS cron)                │
+│         backtest.py (backtest dispatcher)               │
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
@@ -35,14 +36,14 @@ TempusOnePs là một nền tảng giao dịch thuật toán (algo trading) dạ
 └─────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────┐
-│                  Plugin Modules                         │
-│         modules/<module_name>/                          │
+│                  Strategy Plugins                       │
+│         strategies/<strategy_name>/                     │
 │           ├── config/config.json                        │
 │           ├── data/        ← DataServicePlugin          │
 │           ├── signals/     ← SignalPlugin               │
 │           ├── execution/   ← ExecutionPlugin            │
 │           ├── log/         ← LogPlugin                  │
-│           └── backtest/    ← standalone backtest script │
+│           └── backtest/    ← run(args) backtest script  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -64,9 +65,7 @@ config.json pipeline entry  →  importlib.import_module(path)
 
 Điều phối thời gian chạy pipeline:
 - **Cron mode** (`cron_expr`): polling mỗi 500ms, fire khi đến lịch
-- **Interval mode** (`interval`): chạy liên tục
-  - `mode='live'`: sleep `interval` giây giữa mỗi tick
-  - `mode='dev'`: không sleep, chạy nhanh nhất có thể, dừng khi callback trả `False`
+- **Interval mode** (`interval`): chạy liên tục, sleep `interval` giây giữa mỗi tick
 
 ### `core/log_queue.py` — LogQueue (Event Bus)
 
@@ -151,10 +150,9 @@ run_pipeline()
 
 | Mode | Lệnh | Hành vi |
 |---|---|---|
-| **Live** | `python run.py --mod <name> --mode live` | Sleep `interval`s giữa mỗi tick, data source pull từ API real-time |
-| **Dev/Replay** | `python run.py --mod <name> --mode dev` | Không sleep, replay CSV row-by-row với tốc độ tối đa |
-| **One-shot** | `python run-cron.py --mod <name>` | Chạy 1 tick duy nhất, thường dùng với OS cron |
-| **Backtest** | `python modules/<name>/backtest/<script>.py` | Tính signal vectorized trên toàn bộ dataset, dùng `backtesting.py` |
+| **Live** | `python run.py -s <name>` | Chạy theo cron/interval, data source pull từ API real-time |
+| **One-shot** | `python run-cron.py -s <name>` | Chạy 1 tick duy nhất, thường dùng với OS cron |
+| **Backtest** | `python backtest.py -s <name>` | Dispatcher gọi `strategies/<name>/backtest/<name>.py::run(args)` |
 
 ---
 
@@ -166,10 +164,10 @@ run_pipeline()
 {
   "interval": 3,
   "pipeline": {
-    "data":      [{ "name": "...", "path": "modules.X.data.Y",      "class": "Z", "enabled": true }],
-    "signals":   [{ "name": "...", "path": "modules.X.signals.Y",   "class": "Z", "enabled": true }],
-    "execution": [{ "name": "...", "path": "modules.X.execution.Y", "class": "Z", "enabled": true }],
-    "log":       [{ "name": "...", "path": "modules.X.log.Y",       "class": "Z", "enabled": true }]
+    "data":      [{ "name": "...", "path": "strategies.X.data.Y",      "class": "Z", "enabled": true }],
+    "signals":   [{ "name": "...", "path": "strategies.X.signals.Y",   "class": "Z", "enabled": true }],
+    "execution": [{ "name": "...", "path": "strategies.X.execution.Y", "class": "Z", "enabled": true }],
+    "log":       [{ "name": "...", "path": "strategies.X.log.Y",       "class": "Z", "enabled": true }]
   }
 }
 ```
@@ -210,13 +208,13 @@ class MyDataService(BaseServicePlugin):
 
 ---
 
-## Module Structure
+## Strategy Structure
 
 ```
-modules/
-└── <module_name>/
+strategies/
+└── <strategy_name>/
     ├── config/
-    │   └── config.json          ← pipeline config của module
+    │   └── config.json          ← pipeline config của strategy
     ├── data/
     │   └── my_data_source.py    ← DataServicePlugin
     ├── signals/
@@ -226,7 +224,7 @@ modules/
     ├── log/
     │   └── my_logger.py         ← BaseServicePlugin (log)
     └── backtest/
-        └── my_backtest.py       ← standalone script, dùng backtesting.py
+        └── <strategy_name>.py   ← expose run(args), dùng backtesting.py
 ```
 
 ---
@@ -252,7 +250,6 @@ ExecutionPlugin.run(signals_df)
 
 | Vấn đề | Nguyên nhân | Giải pháp |
 |---|---|---|
-| Dev/replay chậm | `time.sleep(interval)` mỗi tick | `mode='dev'` bỏ sleep hoàn toàn |
 | Backtest chậm | `mp.Pool` spawn mỗi tick | Pool persistent, tạo 1 lần trong `setup()` |
 | Backtest signal | replay row-by-row | Dùng `backtest/` script: tính signal vectorized 1 lần trên full dataset |
 
@@ -263,5 +260,5 @@ ExecutionPlugin.run(signals_df)
 1. **Plugin qua importlib**: Không cần import tĩnh, thêm plugin chỉ cần thêm entry trong config.json.
 2. **Signals chạy multiprocessing**: Mỗi signal plugin nhận `df.copy()` độc lập, kết quả được merge lại. Tốt cho nhiều strategy song song.
 3. **LogQueue tách biệt**: Các plugin không ghi log trực tiếp ra file/console. Chúng đẩy event vào queue, stage LOG quyết định flush đi đâu.
-4. **mode='dev' vs 'live'**: Cùng một pipeline code, chỉ khác ở Scheduler behavior. Data source quy định khi nào dừng (trả `None`/`False`).
-5. **Backtest tách riêng**: Script backtest trong `modules/<name>/backtest/` chạy độc lập, không đi qua Scheduler, cho phép dùng thư viện backtesting.py với vectorized signals.
+4. **Backtest dispatcher**: `backtest.py -s <name>` tự động import `strategies.<name>.backtest.<name>` và gọi `run(args)` — thêm strategy mới không cần sửa dispatcher.
+5. **Backtest tách riêng**: Script backtest trong `strategies/<name>/backtest/` chạy độc lập, không đi qua Scheduler, cho phép dùng thư viện backtesting.py với vectorized signals.

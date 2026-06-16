@@ -40,7 +40,7 @@ Each service entry in the pipeline looks like this:
 {
   "name": "ServiceName",
   "class": "ClassName",
-  "path": "module.path",
+  "path": "strategies.path",
   "enabled": true,
   "other_params": "value"
 }
@@ -52,29 +52,36 @@ Each service entry in the pipeline looks like this:
 To run the pipeline once immediately:
 
 ```bash
-python run.py --mod <module_name>
+python run.py -s <strategy_name>
 ```
 
 ### Scheduled Run
 To run the pipeline continuously based on the cron schedule defined in the config:
 
 ```bash
-python run-cron.py --mod <module_name>
+python run-cron.py -s <strategy_name>
 ```
 
-If `--mod` is not provided, the system will look for `config/config.json` in the root directory.
-If `--mod <module_name>` is provided, it will look for `modules/<module_name>/config/config.json`.
+If `-s` is not provided, the system will look for `config/config.json` in the root directory.
+If `-s <strategy_name>` is provided, it will look for `strategies/<strategy_name>/config/config.json`.
+
+### Backtest
+To run a backtest for a strategy:
+
+```bash
+python backtest.py -s <strategy_name>
+```
 
 ## Extending the System
 
-To add a new service (e.g., a new signal strategy):
+To add a new strategy:
 
-1.  Create a new Python file in `modules/` (or appropriate subdirectory).
-2.  Define a class that inherits from the appropriate base class:
+1.  Create a new directory under `strategies/`.
+2.  Define plugin classes that inherit from the appropriate base class:
     *   `BaseServicePlugin` for general services.
     *   `BaseSignalPlugin` for signal services.
 3.  Implement the `run` method.
-4.  Add the new service to `config/config.json` under the appropriate pipeline stage.
+4.  Add the new service to `strategies/<strategy_name>/config/config.json` under the appropriate pipeline stage.
 
 ### Example Signal Service
 

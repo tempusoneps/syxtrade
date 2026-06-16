@@ -3,7 +3,7 @@ import os
 
 
 def load_config(args, log_queue):
-    module = args.mod
+    module = args.strategy
     current_folder = os.path.dirname(os.path.abspath(__file__))
     if module == "":
         cfg_file_path = os.path.dirname(current_folder) + "/config/config.json"
