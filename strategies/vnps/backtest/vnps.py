@@ -18,6 +18,9 @@ plt.rcParams['figure.dpi'] = 120
 warnings.filterwarnings('ignore')
 
 BACKTEST_DIR = os.path.dirname(os.path.abspath(__file__))
+INITIAL_CASH = 1500
+COMMISSION = 0.00027
+MARGIN = 0.1
 
 
 class MainStrategy(Strategy):
@@ -30,7 +33,6 @@ class MainStrategy(Strategy):
     strategy = ''
 
     def init(self):
-        self._broker._cash = 1500
         self.strategy = ''
         super().init()
 
@@ -137,8 +139,18 @@ def run(args):
 
     signals_data.dropna(inplace=True)
     print(f"[backtest] Dữ liệu sau khi lọc NaN: {len(signals_data)} nến")
+    for column in ("ema_signal", "macd_signal", "predict_is_max"):
+        if column in signals_data:
+            print(f"[backtest] {column}: {signals_data[column].value_counts(dropna=False).to_dict()}")
 
-    bt = Backtest(signals_data, MainStrategy, commission=0.00027, exclusive_orders=True)
+    bt = Backtest(
+        signals_data,
+        MainStrategy,
+        cash=INITIAL_CASH,
+        commission=COMMISSION,
+        margin=MARGIN,
+        exclusive_orders=True,
+    )
     stats = bt.run()
 
     _print_report(stats)

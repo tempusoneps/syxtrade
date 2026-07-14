@@ -27,6 +27,7 @@ dependencies = [
     "cryptography",
     "xgboost>=3.2.0",
     "scikit-learn>=1.9.0",
+    "click>=8.4.1",
 ]
 
 [project.optional-dependencies]
