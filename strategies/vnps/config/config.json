@@ -1,0 +1,55 @@
+{
+	"cron": "*/5 9,10,11,13,14 * * 1-5",
+	"pipeline": {
+		"data": [
+			{
+				"name": "vn30f1m_dnse",
+				"path": "strategies.vnps.data.vn30f1m_dnse",
+				"class": "DataServiceDNSE",
+				"enabled": true
+			}
+		],
+		"signals": [
+			{
+				"name": "ema_cross.signal",
+				"path": "strategies.vnps.signals.ema_cross",
+				"class": "EMACrossSignalPlugin",
+				"enabled": true
+			},
+			{
+				"name": "max_high.predict",
+				"path": "strategies.vnps.signals.predict_high_low",
+				"class": "AIPredictSignalPlugin",
+				"enabled": true
+			},
+			{
+				"name": "macd.signal",
+				"path": "strategies.vnps.signals.macd",
+				"class": "OnlyMACDSignalPlugin",
+				"enabled": true
+			}
+		],
+		"execution": [
+			{
+				"name": "base.simple_worker",
+				"path": "strategies.base.execution.simple_worker",
+				"class": "SimpleWorkerExecutionService",
+				"enabled": true
+			}
+		],
+		"log": [
+			{
+				"name": "vnps.print_msg",
+				"path": "strategies.vnps.log.print_msg",
+				"class": "LogPrintService",
+				"enabled": true
+			},
+			{
+				"name": "vnps.storage_file",
+				"path": "strategies.vnps.log.to_file",
+				"class": "LogFileService",
+				"enabled": true
+			}
+		]
+	}
+}

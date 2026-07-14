@@ -35,8 +35,8 @@ $$$$$$$$/______   _____  ____    ______   __    __   _______ /$$$$$$  | _______ 
 │   ├── stock_price_patterns/     # Candlestick pattern recognition
 │   └── telegram_api.py           # Telegram integration
 │
-├── modules/                      # Service implementations (Data, Signals, Execution, Log)
-│   └── examples/                 # Example services
+├── strategies/                   # Strategy implementations (Data, Signals, Execution, Log)
+│   └── base/                     # Base/example strategy
 │
 ├── tools/                        # Utility scripts
 │

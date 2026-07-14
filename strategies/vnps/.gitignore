@@ -8,4 +8,5 @@ venv
 *.log
 .DS_store
 .vscode
-telegram_api.json
+execution/*.pl
+**.log

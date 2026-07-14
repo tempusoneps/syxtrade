@@ -26,6 +26,11 @@ def main():
         for s in group:
             s.setup()
 
+    # Tạo pool 1 lần
+    signal_services = services.get("signals", [])
+    tops = TempusOnePsSignal(signal_services, log_queue)
+    tops.setup()
+
     # Pipeline flow
     def run_pipeline():
         # 1. DATA
@@ -33,26 +38,27 @@ def main():
         for se in services.get("data", []):
             df = se.run()
 
-        if df is not None:
-            # 2. SIGNALS (multiprocess)
-            signal_services = services.get("signals", [])
-            tops = TempusOnePsSignal(signal_services, df, log_queue)
-            signals_output = tops.run()
+        if df is None:
+            return
 
-            # 3. EXECUTION
-            for se in services.get("execution", []):
-                se.run(signals_output)
+        # 2. SIGNALS
+        signals_output = tops.run(df)
 
-            # 4. LOG
-            for se in services.get("log", []):
-                se.run()
+        # 3. EXECUTION
+        for se in services.get("execution", []):
+            se.run(signals_output)
 
-            # 5. clear log queue
-            log_queue.clear_all()
+        # 4. LOG
+        for se in services.get("log", []):
+            se.run()
+
+        # 5. clear log queue
+        log_queue.clear_all()
 
     run_pipeline()
 
     # Finish phase
+    tops.teardown()
     for group in services.values():
         for s in group:
             s.teardown()

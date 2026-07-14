@@ -7,7 +7,7 @@ name = "tempusoneps"
 version = "0.1.0"
 description = "Modular, Connectable, and Scalable Quant & Algo Trading Platform"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
   {name = "TempusOnePs Team"}
@@ -19,9 +19,25 @@ dependencies = [
     "requests",
     "python-dateutil",
     "croniter",
+    "aiocron",
     "backtesting",
-    "matplotlib"
+    "matplotlib",
+    "pymysql",
+    "python-dotenv",
+    "cryptography",
+    "xgboost>=3.2.0",
+    "scikit-learn>=1.9.0",
+    "click>=8.4.1",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "jupyterlab",
+]
+
+[tool.uv]
+package = false
 
 [tool.setuptools.packages.find]
 where = ["."]

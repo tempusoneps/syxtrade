@@ -30,40 +30,44 @@ class BaseSignalPlugin(BaseServicePlugin):
 
 
 class TempusOnePsSignal:
-    def __init__(self, signal_classes, data, log_queue):
+    def __init__(self, signal_classes, log_queue=None):
         self.signal_classes = signal_classes
-        self.df = data
         self.log_queue = log_queue
+        self._pool = None
 
-    def run(self):
-        self.add_log_queue(self.df, "signal_run", "before")
-        """
-        run all signal functions as multiprocessing
-        """
-        cpu_num = len(self.signal_classes)
-        with mp.Pool(processes=cpu_num) as pool:
-            results = pool.map(
-                self.run_single_signal_module,
-                [(cfg, self.df) for cfg in self.signal_classes]
-            )
+    def setup(self):
+        cpu_num = max(1, len(self.signal_classes))
+        self._pool = mp.Pool(processes=cpu_num)
 
-        #
-        df_merged = self.df
+    def run(self, df):
+        # Lazy init: nếu chưa gọi setup() thì tự tạo pool (backward compat)
+        if self._pool is None:
+            self.setup()
+        self.add_log_queue(df, "signal_run", "before")
+        results = self._pool.map(
+            self.run_single_signal_module,
+            [(cfg, df) for cfg in self.signal_classes]
+        )
+        df_merged = df
         for r in results:
             df_merged = df_merged.merge(r["data"], left_index=True, right_index=True, how='inner')
             self.add_log_queue(r["data"], r["meta_data"]["service_name"], "result")
-        #
         return df_merged
+
+    def teardown(self):
+        if self._pool:
+            self._pool.close()
+            self._pool.join()
+            self._pool = None
 
     @staticmethod
     def run_single_signal_module(args):
-        """
-        args = (signal_cfg, df)
-        """
         signal_cfg, df = args
         return signal_cfg.run(df.copy())
 
     def add_log_queue(self, data=None, service_name="", step="after"):
+        if not self.log_queue:
+            return
         if isinstance(data, pd.DataFrame):
             last = data.iloc[-1]
             payload = {

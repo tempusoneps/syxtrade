@@ -4,7 +4,7 @@
 		"data": [
 			{
 				"name": "replay_ohcl_csv",
-				"path": "modules.examples.data.replay_ohcl_csv",
+				"path": "strategies.base.data.replay_ohcl_csv",
 				"class": "DataServiceExampleCsv",
 				"enabled": true
 			}
@@ -12,24 +12,30 @@
 		"signals": [
 			{
 				"name": "ema_cross.signal",
-				"path": "modules.examples.signals.ema_cross",
+				"path": "strategies.base.signals.ema_cross",
 				"class": "EMACrossSignalPlugin",
 				"enabled": true
 			}
 		],
 		"execution": [
 			{
-				"name": "examples.simple_worker",
-				"path": "modules.examples.execution.simple_worker",
+				"name": "base.simple_worker",
+				"path": "strategies.base.execution.simple_worker",
 				"class": "SimpleWorkerExecutionService",
 				"enabled": true
 			}
 		],
 		"log": [
 			{
-				"name": "examples.storage_file",
-				"path": "modules.examples.log.storage_file",
+				"name": "base.storage_file",
+				"path": "strategies.base.log.storage_file",
 				"class": "ExampleLogFileService",
+				"enabled": true
+			},
+			{
+				"name": "base.print_msg",
+				"path": "strategies.base.log.print_msg",
+				"class": "ExampleLogPrintService",
 				"enabled": true
 			}
 		]

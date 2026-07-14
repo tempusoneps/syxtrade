@@ -3,12 +3,12 @@ import os
 
 
 def load_config(args, log_queue):
-    module = args.mod
+    module = args.strategy
     current_folder = os.path.dirname(os.path.abspath(__file__))
     if module == "":
         cfg_file_path = os.path.dirname(current_folder) + "/config/config.json"
     else:
-        cfg_file_path = os.path.dirname(current_folder) + "/modules/" + module + "/config/config.json"
+        cfg_file_path = os.path.dirname(current_folder) + "/strategies/" + module + "/config/config.json"
     is_file = os.path.isfile(cfg_file_path)
     if not is_file:
         exit("Could not find the config file")
