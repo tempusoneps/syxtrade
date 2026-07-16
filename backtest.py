@@ -11,6 +11,13 @@ def main():
         required=True,
         help="Strategy name to backtest (e.g. vnps)"
     )
+    parser.add_argument(
+        "--stats-json",
+        nargs="?",
+        const="",
+        default=None,
+        help="Export backtest stats to a JSON file. If no path is provided, the strategy default is used."
+    )
     args = parser.parse_args()
 
     module_path = f"strategies.{args.strategy}.backtest.{args.strategy}"
