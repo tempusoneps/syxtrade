@@ -12,8 +12,8 @@ config/config.json
 **-private.py
 **-private.sh
 # Ignore all modules
-modules/*
+strategies/*
 # But keep example modules
-!modules/base/
-!modules/vnps/
-!modules/examples/
+!strategies/base/
+!strategies/vnps/
+!strategies/examples/
